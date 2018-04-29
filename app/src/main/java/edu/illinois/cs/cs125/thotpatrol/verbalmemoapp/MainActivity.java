@@ -155,10 +155,11 @@ public class MainActivity extends AppCompatActivity {
      * Begins the process of recording audio.
      */
     private void startRecordAudio() {
+        fileName = getSaveFilename().toString();
         soundRecorder = new MediaRecorder();
         soundRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         soundRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-        soundRecorder.setOutputFile(getSaveFilename().toString());
+        soundRecorder.setOutputFile(fileName);
         soundRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
         try{
             soundRecorder.prepare();

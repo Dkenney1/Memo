@@ -1,6 +1,7 @@
 package edu.illinois.cs.cs125.thotpatrol.verbalmemoapp;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.PorterDuff;
@@ -111,6 +112,13 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        final ImageButton openFile = findViewById(R.id.openFileButton);
+        openFile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View v) {
+                startOpenFile();
+            }
+        });
 
         ProgressBar progressBar = findViewById(R.id.progressBar);
         progressBar.setVisibility(View.INVISIBLE);
@@ -122,10 +130,29 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
     }
 
+    public void onActivityResult(final int requestCode, final int resultCode,
+                                 final Intent resultData) {
+        if (resultCode != Activity.RESULT_OK) {
+            return;
+        }
+        Uri currentAudioURI;
+        if (requestCode == READ_REQUEST_CODE) {
+            currentAudioURI = resultData.getData();
+            fileName = currentAudioURI.getPath();
+        } else if (requestCode == AUDIO_CAPTURE_REQUEST_CODE) {
+            currentAudioURI = Uri.fromFile(currentMemoFile);
+            if (canWriteToPublicStorage) {
+                addAudioToGallery(currentAudioURI);
+            }
+        } else {
+            return;
+        }
+    }
+
     private void startOpenFile() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("image/*");
+        intent.addCategory(Intent.CATEGORY_DEFAULT);
+        intent.setType("audio/*");
         startActivityForResult(intent, READ_REQUEST_CODE);
     }
 
@@ -155,22 +182,34 @@ public class MainActivity extends AppCompatActivity {
      * Begins the process of recording audio.
      */
     private void startRecordAudio() {
+        currentMemoFile = getSaveFilename();
         fileName = getSaveFilename().toString();
+
+        /*Intent recordIntent = new Intent(MediaStore.Audio.Media.RECORD_SOUND_ACTION);
+
+
+        recordIntent.putExtra(MediaStore.EXTRA_OUTPUT, audioURI);
+        startActivityForResult(recordIntent, AUDIO_CAPTURE_REQUEST_CODE);
+        */
+
         soundRecorder = new MediaRecorder();
         soundRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         soundRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
         soundRecorder.setOutputFile(fileName);
         soundRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+
         try{
             soundRecorder.prepare();
         } catch (Exception e) {
             System.out.println("Crap");
         }
-
         soundRecorder.start();
     }
     private void stopRecordAudio() {
         soundRecorder.stop();
+        /*Uri audioURI = FileProvider.getUriForFile(this,
+                "com.github.Dkenny1.Memo.fileprovider", currentMemoFile);
+        addAudioToGallery(audioURI);*/
         soundRecorder.release();
         soundRecorder = null;
     }
@@ -189,15 +228,20 @@ public class MainActivity extends AppCompatActivity {
         soundPlayer.release();
         soundPlayer = null;
     }
+    void addAudioToGallery(final Uri toAdd) {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        mediaScanIntent.setData(toAdd);
+        this.sendBroadcast(mediaScanIntent);
+    }
     File getSaveFilename() {
         String imageFileName = "Memo_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
                 .format(new Date());
         File storageDir;
         if (canWriteToPublicStorage) {
             storageDir = Environment
-                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
         } else {
-            storageDir = getExternalFilesDir(Environment.DIRECTORY_DCIM);
+            storageDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
         }
         try {
             return File.createTempFile(imageFileName, ".3gp", storageDir);

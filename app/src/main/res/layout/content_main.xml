@@ -57,7 +57,7 @@
         app:srcCompat="@android:drawable/ic_btn_speak_now" />
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab1"
+        android:id="@+id/openFileButton"
         android:layout_width="70dp"
         android:layout_height="69dp"
         android:layout_gravity="center|bottom"
@@ -74,7 +74,7 @@
         app:layout_constraintEnd_toStartOf="@+id/recordButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/guideline3"
-        app:srcCompat="@android:drawable/ic_input_add" />
+        app:srcCompat="@android:drawable/ic_menu_search" />
 
     <android.support.design.widget.FloatingActionButton
 

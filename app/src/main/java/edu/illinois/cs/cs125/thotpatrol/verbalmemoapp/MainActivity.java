@@ -151,8 +151,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void startOpenFile() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_DEFAULT);
-        intent.setType("audio/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
         startActivityForResult(intent, READ_REQUEST_CODE);
     }
 
@@ -184,13 +184,12 @@ public class MainActivity extends AppCompatActivity {
     private void startRecordAudio() {
         currentMemoFile = getSaveFilename();
         fileName = getSaveFilename().toString();
-
-        /*Intent recordIntent = new Intent(MediaStore.Audio.Media.RECORD_SOUND_ACTION);
+        /*
+        Intent recordIntent = new Intent(MediaStore.Audio.Media.RECORD_SOUND_ACTION);
 
 
         recordIntent.putExtra(MediaStore.EXTRA_OUTPUT, audioURI);
-        startActivityForResult(recordIntent, AUDIO_CAPTURE_REQUEST_CODE);
-        */
+        startActivityForResult(recordIntent, AUDIO_CAPTURE_REQUEST_CODE);*/
 
         soundRecorder = new MediaRecorder();
         soundRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
@@ -207,9 +206,8 @@ public class MainActivity extends AppCompatActivity {
     }
     private void stopRecordAudio() {
         soundRecorder.stop();
-        /*Uri audioURI = FileProvider.getUriForFile(this,
+        Uri audioURI = FileProvider.getUriForFile(this,
                 "com.github.Dkenny1.Memo.fileprovider", currentMemoFile);
-        addAudioToGallery(audioURI);*/
         soundRecorder.release();
         soundRecorder = null;
     }
@@ -239,9 +237,9 @@ public class MainActivity extends AppCompatActivity {
         File storageDir;
         if (canWriteToPublicStorage) {
             storageDir = Environment
-                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
         } else {
-            storageDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+            storageDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC);
         }
         try {
             return File.createTempFile(imageFileName, ".3gp", storageDir);

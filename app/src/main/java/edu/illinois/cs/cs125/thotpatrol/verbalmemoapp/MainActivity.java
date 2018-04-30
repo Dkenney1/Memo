@@ -1,6 +1,7 @@
 package edu.illinois.cs.cs125.thotpatrol.verbalmemoapp;
 
 import android.Manifest;
+import android.media.MediaPlayer.OnCompletionListener;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -213,6 +214,12 @@ public class MainActivity extends AppCompatActivity {
     }
     private void startPlaying() {
         soundPlayer = new MediaPlayer();
+        soundPlayer.setOnCompletionListener(new OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                stopPlaying();
+            }
+        });
         try {
             soundPlayer.setDataSource(fileName);
             soundPlayer.prepare();
@@ -223,8 +230,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void stopPlaying() {
-        soundPlayer.release();
-        soundPlayer = null;
+        if (soundPlayer != null) {
+            soundPlayer.release();
+            soundPlayer = null;
+        }
     }
     void addAudioToGallery(final Uri toAdd) {
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
@@ -239,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
             storageDir = Environment
                     .getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
         } else {
-            storageDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC);
+            storageDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
         }
         try {
             return File.createTempFile(imageFileName, ".3gp", storageDir);

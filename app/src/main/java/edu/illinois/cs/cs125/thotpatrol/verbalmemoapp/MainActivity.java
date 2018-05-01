@@ -23,9 +23,12 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+
+import com.codekidlabs.storagechooser.StorageChooser;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,6 +38,7 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
     private boolean canWriteToPublicStorage = false;
+    private boolean canReadPublicStorage = false;
     private boolean canRecordAudio = false;
     private static final int REQUEST_WRITE_STORAGE = 112;
     private static final int REQUEST_MICROPHONE_ACCESS = 110;
@@ -67,11 +71,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        fileName = getExternalCacheDir().getAbsolutePath();
-        fileName += "/memoFiles";
-        fileName += "/" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-                .format(new Date());
-        fileName += ".3gp";
+
         /**
          * TODO Implement file selection
          * Currently can only play the file made upon app start up.
@@ -81,9 +81,12 @@ public class MainActivity extends AppCompatActivity {
                 Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
         canRecordAudio = (ContextCompat.checkSelfPermission(MainActivity.this,
                 Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED);
-        if (!canWriteToPublicStorage || !canRecordAudio) {
+        canReadPublicStorage = (ContextCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
+        if (!canWriteToPublicStorage || !canRecordAudio || !canReadPublicStorage) {
             ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO},
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO,
+                            Manifest.permission.READ_EXTERNAL_STORAGE},
                     REQUEST_WRITE_STORAGE);
         }
 
@@ -140,6 +143,8 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == READ_REQUEST_CODE) {
             currentAudioURI = resultData.getData();
             fileName = currentAudioURI.getPath();
+            System.out.println(fileName);
+            //startPlaying();
         } else if (requestCode == AUDIO_CAPTURE_REQUEST_CODE) {
             currentAudioURI = Uri.fromFile(currentMemoFile);
             if (canWriteToPublicStorage) {
@@ -151,10 +156,40 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startOpenFile() {
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+
+        StorageChooser chooser = new StorageChooser.Builder()
+                .withActivity(MainActivity.this)
+                .withFragmentManager(getFragmentManager())
+                .allowCustomPath(true)
+                .setType(StorageChooser.FILE_PICKER)
+                .build();
+        // Show dialog whenever you want by
+        chooser.show();
+
+        // get path that the user has chosen
+        chooser.setOnSelectListener(new StorageChooser.OnSelectListener() {
+            @Override
+            public void onSelect(String path) {
+                fileName = path;
+                Log.e("SELECTED_PATH", path);
+            }
+        });
+        /*
+
+        File dir = new File(Environment
+                .getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath() + "/memoFilesTemp/");
+        File[] fileList = dir.listFiles();
+        String[] theNamesOfFiles = new String[fileList.length];
+        for (int i = 0; i < theNamesOfFiles.length; i++) {
+            theNamesOfFiles[i] = fileList[i].getName();
+            System.out.println(theNamesOfFiles[i] + " " + fileList[i].getAbsolutePath());
+        }
+        new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, theNamesOfFiles);
+
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("*/*");
-        startActivityForResult(intent, READ_REQUEST_CODE);
+        intent.setType("audio/*");
+        startActivityForResult(intent, READ_REQUEST_CODE);*/
     }
 
     @Override
@@ -184,7 +219,8 @@ public class MainActivity extends AppCompatActivity {
      */
     private void startRecordAudio() {
         currentMemoFile = getSaveFilename();
-        fileName = getSaveFilename().toString();
+
+        fileName = currentMemoFile.toString();
         /*
         Intent recordIntent = new Intent(MediaStore.Audio.Media.RECORD_SOUND_ACTION);
 
@@ -194,9 +230,9 @@ public class MainActivity extends AppCompatActivity {
 
         soundRecorder = new MediaRecorder();
         soundRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        soundRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+        soundRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
         soundRecorder.setOutputFile(fileName);
-        soundRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+        soundRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
 
         try{
             soundRecorder.prepare();
@@ -207,12 +243,13 @@ public class MainActivity extends AppCompatActivity {
     }
     private void stopRecordAudio() {
         soundRecorder.stop();
-        Uri audioURI = FileProvider.getUriForFile(this,
-                "com.github.Dkenny1.Memo.fileprovider", currentMemoFile);
         soundRecorder.release();
         soundRecorder = null;
     }
     private void startPlaying() {
+        if (fileName == null) {
+            return;
+        }
         soundPlayer = new MediaPlayer();
         soundPlayer.setOnCompletionListener(new OnCompletionListener() {
             @Override
@@ -244,14 +281,26 @@ public class MainActivity extends AppCompatActivity {
         String imageFileName = "Memo_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
                 .format(new Date());
         File storageDir;
+
+        fileName = Environment
+                .getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath();
+        fileName += "/memoFilesTemp/";
+        /*fileName += "/" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+                .format(new Date());
+        fileName += ".3gp";*/
+        //System.out.println(fileName);
+        File tempFile = new File(fileName);
+        tempFile.mkdir();
+
+
         if (canWriteToPublicStorage) {
-            storageDir = Environment
-                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
+            storageDir = new File (Environment
+                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath() + "/memoFilesTemp/") ;
         } else {
             storageDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
         }
         try {
-            return File.createTempFile(imageFileName, ".3gp", storageDir);
+            return File.createTempFile(imageFileName, ".mp4", storageDir);
         } catch (IOException e) {
             return null;
         }

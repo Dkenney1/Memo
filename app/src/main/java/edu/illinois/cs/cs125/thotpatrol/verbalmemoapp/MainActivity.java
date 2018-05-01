@@ -33,6 +33,7 @@ import com.codekidlabs.storagechooser.StorageChooser;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
@@ -157,13 +158,18 @@ public class MainActivity extends AppCompatActivity {
 
     private void startOpenFile() {
 
+        ArrayList<String> customExtension = new ArrayList<String>();
+        customExtension.add(".3gp");
+
         StorageChooser chooser = new StorageChooser.Builder()
                 .withActivity(MainActivity.this)
                 .withFragmentManager(getFragmentManager())
                 .allowCustomPath(true)
+                .withMemoryBar(true)
                 .setType(StorageChooser.FILE_PICKER)
+                .filter(StorageChooser.FileType.AUDIO)
                 .build();
-        // Show dialog whenever you want by
+
         chooser.show();
 
         // get path that the user has chosen
@@ -174,22 +180,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("SELECTED_PATH", path);
             }
         });
-        /*
-
-        File dir = new File(Environment
-                .getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath() + "/memoFilesTemp/");
-        File[] fileList = dir.listFiles();
-        String[] theNamesOfFiles = new String[fileList.length];
-        for (int i = 0; i < theNamesOfFiles.length; i++) {
-            theNamesOfFiles[i] = fileList[i].getName();
-            System.out.println(theNamesOfFiles[i] + " " + fileList[i].getAbsolutePath());
-        }
-        new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, theNamesOfFiles);
-
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("audio/*");
-        startActivityForResult(intent, READ_REQUEST_CODE);*/
     }
 
     @Override
@@ -230,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
 
         soundRecorder = new MediaRecorder();
         soundRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        soundRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+        soundRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
         soundRecorder.setOutputFile(fileName);
         soundRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
 
@@ -300,7 +290,7 @@ public class MainActivity extends AppCompatActivity {
             storageDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
         }
         try {
-            return File.createTempFile(imageFileName, ".mp4", storageDir);
+            return File.createTempFile(imageFileName, ".mp3", storageDir);
         } catch (IOException e) {
             return null;
         }

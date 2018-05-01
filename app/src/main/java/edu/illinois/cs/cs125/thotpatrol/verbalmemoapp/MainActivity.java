@@ -26,6 +26,7 @@ import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.codekidlabs.storagechooser.StorageChooser;
@@ -125,9 +126,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        ProgressBar progressBar = findViewById(R.id.progressBar);
-        progressBar.setVisibility(View.INVISIBLE);
-        progressBar.getIndeterminateDrawable()
+        SeekBar seekBar = findViewById(R.id.seekBar);
+        seekBar.getIndeterminateDrawable()
                 .setColorFilter(getResources()
                         .getColor(R.color.colorPrimaryDark), PorterDuff.Mode.SRC_IN);
 

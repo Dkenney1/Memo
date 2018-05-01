@@ -11,6 +11,8 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -47,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int READ_REQUEST_CODE = 42;
     private static final int AUDIO_CAPTURE_REQUEST_CODE = 1;
     private static String fileName = null;
+    ProgressBar progressBar;
+    Thread background;
 
     MediaRecorder soundRecorder = null;
     MediaPlayer soundPlayer = new MediaPlayer();
@@ -126,8 +130,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        SeekBar seekBar = findViewById(R.id.seekBar);
-        seekBar.getIndeterminateDrawable()
+        progressBar = findViewById(R.id.progressBar);
+        progressBar.getIndeterminateDrawable()
                 .setColorFilter(getResources()
                         .getColor(R.color.colorPrimaryDark), PorterDuff.Mode.SRC_IN);
 
@@ -254,10 +258,30 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             System.out.println("Crap");
         }
+        progressBar.setProgress(0);
+        background = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    while (progressBar.getProgress() <= progressBar.getMax()) {
+                        Thread.sleep(soundPlayer.getDuration()/100);
+                        progressBar.incrementProgressBy(1);
+                    }
+                } catch (Exception e) {
+                    System.out.println("Fug");
+                }
+            }
+        });
+        background.start();
     }
+
 
     private void stopPlaying() {
         if (soundPlayer != null) {
+            try {
+                background.stop();
+            } catch (Exception e) {
+                //Nothing to see here.
+            }
             soundPlayer.release();
             soundPlayer = null;
         }

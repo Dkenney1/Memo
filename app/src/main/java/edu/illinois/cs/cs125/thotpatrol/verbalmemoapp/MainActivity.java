@@ -101,10 +101,13 @@ public class MainActivity extends AppCompatActivity {
             boolean beginRecording = true;
             @Override
             public void onClick(final View v) {
-                onRecord(beginRecording);
                 if (beginRecording) {
+                    recordAudio.setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
+                    onRecord(beginRecording);
                     beginRecording = false;
                 } else {
+                    recordAudio.setImageResource(android.R.drawable.ic_btn_speak_now);
+                    onRecord(beginRecording);
                     beginRecording = true;
                 }
             }
@@ -114,10 +117,13 @@ public class MainActivity extends AppCompatActivity {
             boolean beginPlaying = true;
             @Override
             public void onClick(final View v) {
-                onPlay(beginPlaying);
                 if (beginPlaying) {
+                    playAudio.setImageResource(android.R.drawable.ic_media_pause);
+                    onPlay(beginPlaying);
                     beginPlaying = false;
                 } else {
+                    playAudio.setImageResource(android.R.drawable.ic_media_play);
+                    onPlay(beginPlaying);
                     beginPlaying = true;
                 }
             }
